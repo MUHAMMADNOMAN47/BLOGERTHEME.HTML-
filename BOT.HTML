@@ -1,0 +1,45 @@
+// Forex Trading Signal Bot for Blogger
+const API_URL = "https://api.exchangerate.host/latest?base=USD"; // Example free API
+const currencyPair = "EURUSD"; // Change as needed
+
+async function getForexData() {
+    try {
+        let response = await fetch(API_URL);
+        let data = await response.json();
+        return data.rates["EUR"] || null; // Get EUR/USD rate
+    } catch (error) {
+        console.error("Error fetching Forex data:", error);
+        return null;
+    }
+}
+
+let lastPrice = null;
+
+async function analyzeMarket() {
+    let currentPrice = await getForexData();
+    if (!currentPrice) return;
+
+    let signal = "HOLD";
+    if (lastPrice) {
+        if (currentPrice > lastPrice) {
+            signal = "BUY";
+        } else if (currentPrice < lastPrice) {
+            signal = "SELL";
+        }
+    }
+
+    lastPrice = currentPrice;
+    displaySignal(signal, currentPrice);
+}
+
+function displaySignal(signal, price) {
+    let signalBox = document.getElementById("forex-signal");
+    signalBox.innerHTML = `<h2>${signal}</h2><p>EUR/USD: ${price.toFixed(4)}</p>`;
+    signalBox.style.color = signal === "BUY" ? "green" : signal === "SELL" ? "red" : "black";
+}
+
+// Run bot every 1 minute
+setInterval(analyzeMarket, 60000);
+
+// Initial run
+analyzeMarket();
